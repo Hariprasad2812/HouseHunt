@@ -1,0 +1,72 @@
+# ------------------------------------------------------------------
+# HouseHunt API configuration
+# Default profile runs on embedded H2 (MySQL compatibility mode) so the
+# application starts with zero setup. Switch to the "mysql" profile for a
+# real MySQL deployment (see application-mysql.yml + docker-compose.yml).
+# ------------------------------------------------------------------
+spring:
+  application:
+    name: househunt-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: Asia/Kolkata
+  servlet:
+    multipart:
+      max-file-size: 12MB
+      max-request-size: 60MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+
+househunt:
+  jwt:
+    # Override via env HOUSEHUNT_JWT_SECRET in production. Must be >= 256 bits.
+    secret: ${HOUSEHUNT_JWT_SECRET:househunt-bangalore-rental-platform-jwt-signing-key-change-me-in-production-0123456789}
+    expiration-ms: ${HOUSEHUNT_JWT_EXPIRATION:604800000}
+  upload:
+    dir: ${HOUSEHUNT_UPLOAD_DIR:uploads}
+  cors:
+    allowed-origins: ${HOUSEHUNT_CORS_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:3000}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:househunt;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/househunt?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:househunt}
+    password: ${DB_PASSWORD:househunt}
+  jpa:
+    hibernate:
+      ddl-auto: ${DB_DDL_AUTO:update}

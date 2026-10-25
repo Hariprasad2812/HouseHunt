@@ -1,0 +1,42 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: househunt-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: househunt
+      MYSQL_USER: househunt
+      MYSQL_PASSWORD: househunt
+    ports:
+      - "3307:3306"
+    volumes:
+      - househunt_mysql_data:/var/lib/mysql
+
+  backend:
+    image: hariees/househunt-backend:latest
+    container_name: househunt-backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: jdbc:mysql://mysql:3306/househunt?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
+      DB_USERNAME: househunt
+      DB_PASSWORD: househunt
+      DB_DDL_AUTO: update
+
+  frontend:
+    image: hariees/househunt-frontend:latest
+    container_name: househunt-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3001:80"
+
+volumes:
+  househunt_mysql_data:

@@ -1,0 +1,26 @@
+import { chromium } from 'playwright-core';
+const BASE='http://localhost:5173';
+const issues=[];
+const b=await chromium.launch();
+const c=await b.newContext({viewport:{width:1440,height:960}});
+const p=await c.newPage();
+p.on('pageerror',e=>issues.push('PAGEERROR '+e.message));
+const url=()=>p.url().replace('http://localhost:5173','');
+await p.goto(BASE+'/properties',{waitUntil:'networkidle'});
+await p.waitForTimeout(1600);
+await p.locator('button[aria-label*="Save home"]').first().click({timeout:8000});
+await p.waitForTimeout(600);
+const links=p.locator('a[href="/login"]');
+let visIdx=-1;
+for(let i=0;i<await links.count();i++){ if(await links.nth(i).isVisible().catch(()=>false)){ visIdx=i; break; } }
+console.log('visible sign-in link idx:',visIdx);
+await links.nth(visIdx).click();
+await p.waitForTimeout(1400);
+console.log('on /login:',url().startsWith('/login'));
+await p.locator('button',{hasText:/^Tenant/}).first().click();
+await p.waitForTimeout(4200);
+console.log('after login ->',url());
+if(!url().startsWith('/properties')) issues.push('gate return failed '+url());
+console.log('ISSUES:',issues.length?issues:'none');
+await b.close();
+process.exit(issues.length?2:0);

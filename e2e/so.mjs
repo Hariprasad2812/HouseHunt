@@ -1,0 +1,20 @@
+import { chromium } from 'playwright-core';
+const BASE='http://localhost:5173';
+const b=await chromium.launch();
+const p=await b.newPage({viewport:{width:1440,height:960}});
+p.on('pageerror',e=>console.log('PAGEERR',e.message));
+p.on('console',m=>{ if(m.type()==='error') console.log('CE',m.text().slice(0,160)); });
+p.on('response',r=>{ if(r.status()>=400&&['fetch','xhr','document'].includes(r.request().resourceType())) console.log('HTTP'+r.status(),r.url().slice(0,110)); });
+await p.goto(BASE+'/login',{waitUntil:'networkidle'});
+await p.locator('button',{hasText:/^Tenant/}).first().click();
+await p.waitForTimeout(4000);
+console.log('in tenant:',p.url());
+const so=p.locator('button[aria-label="Sign out"]');
+console.log('sign out visible:',await so.isVisible());
+await so.click();
+// wait 3s and inspect
+await p.waitForTimeout(3000);
+console.log('url after 3s:',p.url());
+await p.waitForTimeout(4000);
+console.log('url after 7s:',p.url());
+await b.close();

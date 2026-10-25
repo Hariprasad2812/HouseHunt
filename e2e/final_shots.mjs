@@ -1,0 +1,15 @@
+import { chromium } from 'playwright-core';
+const BASE='http://localhost:5173';
+const b=await chromium.launch();
+const D=async (path,name,w=1440,h=960)=>{const p=await b.newPage({viewport:{width:w,height:h}});await p.goto(BASE+path,{waitUntil:'networkidle'});await p.waitForTimeout(2600);await p.screenshot({path:`shots/${name}.jpg`,quality:82,type:'jpeg',fullPage:false});await p.close();};
+const M=async (path,name)=>{const p=await b.newPage({viewport:{width:390,height:844}});await p.goto(BASE+path,{waitUntil:'networkidle'});await p.waitForTimeout(2400);await p.screenshot({path:`shots/${name}.jpg`,quality:82,type:'jpeg',fullPage:false});await p.close();};
+await D('/','f-home-d',1440,1400);
+await D('/','f-home-hero',1440,900);
+await D('/list-property','f-list-guest-d');
+await D('/login','f-login-d');
+await D('/properties/3','f-detail-d');
+await D('/properties','f-props-d',1440,1400);
+await M('/','f-home-m');
+await M('/list-property','f-list-guest-m');
+console.log('shots done');
+await b.close();

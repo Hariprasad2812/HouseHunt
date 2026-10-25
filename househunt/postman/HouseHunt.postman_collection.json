@@ -1,0 +1,348 @@
+{
+  "info": {
+    "_postman_id": "househunt-4f1a-9c2e-b37a-7d1a99c0ffee",
+    "name": "HouseHunt API — Bengaluru rentals",
+    "description": "REST API for the HouseHunt demo platform. Use **Login** to authenticate — its test script stores the returned JWT in the collection variable `token`, which every request sends as a `Bearer` header. Change `baseUrl` to point at your environment (default http://localhost:8080). Demo accounts (password `HouseHunt@123`): tenant@househunt.in, aditi@househunt.in (owner), admin@househunt.in.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (tenant)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Riya Menon\",\n  \"email\": \"riya@example.com\",\n  \"phone\": \"+91 98450 12345\",\n  \"password\": \"HouseHunt@123\",\n  \"role\": \"TENANT\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "description": "Open registration. `role` may be TENANT or OWNER."
+          }
+        },
+        {
+          "name": "Register (owner)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Arjun Nair\",\n  \"email\": \"arjun@example.com\",\n  \"phone\": \"+91 98450 90909\",\n  \"password\": \"HouseHunt@123\",\n  \"role\": \"OWNER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login — stores token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"tenant@househunt.in\",\n  \"password\": \"HouseHunt@123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "type": "text/javascript",
+                  "exec": [
+                    "const r = pm.response.json();",
+                    "pm.collectionVariables.set('token', r.token);",
+                    "pm.test('token captured', () => pm.expect(r.token).to.be.a('string').and.not.empty);"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Me (current user)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] } }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Ananya Rao\",\n  \"phone\": \"+91 98450 44444\",\n  \"city\": \"Bengaluru\",\n  \"avatarUrl\": \"\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"HouseHunt@123\",\n  \"newPassword\": \"NewHouseHunt@123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/me/password", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me", "password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Directory",
+      "item": [
+        {
+          "name": "Search properties",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/properties?location=koramangala&type=APARTMENT&furnishing=FURNISHED&minRent=20000&maxRent=80000&bedrooms=2&bathrooms=1&amenities=lift,power-backup&sort=price_asc&page=0&size=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties"],
+              "query": [
+                { "key": "location", "value": "koramangala" },
+                { "key": "type", "value": "APARTMENT" },
+                { "key": "furnishing", "value": "FURNISHED" },
+                { "key": "minRent", "value": "20000" },
+                { "key": "maxRent", "value": "80000" },
+                { "key": "bedrooms", "value": "2" },
+                { "key": "bathrooms", "value": "1" },
+                { "key": "amenities", "value": "lift,power-backup" },
+                { "key": "sort", "value": "price_asc" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "12" }
+              ]
+            },
+            "description": "Paged search. Filters: location/neighbourhood slug, q (text), type, furnishing, minRent/maxRent, bedrooms/bathrooms, amenities (comma-separated), isAvailable, sort (`price_asc`, `price_desc`, `newest`, `relevance`). Response is a Spring page `{content, totalPages, totalElements, number, ...}`."
+          }
+        },
+        {
+          "name": "Featured properties",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/properties/featured", "host": ["{{baseUrl}}"], "path": ["api", "properties", "featured"] } }
+        },
+        {
+          "name": "Property detail",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/properties/1", "host": ["{{baseUrl}}"], "path": ["api", "properties", "1"] } }
+        },
+        {
+          "name": "Locations",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/locations", "host": ["{{baseUrl}}"], "path": ["api", "locations"] } }
+        },
+        {
+          "name": "Location by slug",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/locations/indiranagar", "host": ["{{baseUrl}}"], "path": ["api", "locations", "indiranagar"] } }
+        },
+        {
+          "name": "Amenities",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/amenities", "host": ["{{baseUrl}}"], "path": ["api", "amenities"] } }
+        }
+      ]
+    },
+    {
+      "name": "Engagement (authenticated)",
+      "item": [
+        {
+          "name": "Toggle favourite",
+          "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/properties/1/favorite", "host": ["{{baseUrl}}"], "path": ["api", "properties", "1", "favorite"] } }
+        },
+        {
+          "name": "My favourites",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users/favorites", "host": ["{{baseUrl}}"], "path": ["api", "users", "favorites"] } }
+        },
+        {
+          "name": "Request a visit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": 1,\n  \"scheduledAt\": \"2026-09-12T18:00:00\",\n  \"mode\": \"IN_PERSON\",\n  \"note\": \"Would prefer a weekend slot.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties/1/visits", "host": ["{{baseUrl}}"], "path": ["api", "properties", "1", "visits"] }
+          }
+        },
+        {
+          "name": "My visits",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/visits", "host": ["{{baseUrl}}"], "path": ["api", "visits"] } }
+        },
+        {
+          "name": "Cancel visit (tenant)",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/visits/1/status?status=CANCELLED", "host": ["{{baseUrl}}"], "path": ["api", "visits", "1", "status"], "query": [{ "key": "status", "value": "CANCELLED" }] } }
+        },
+        {
+          "name": "Apply to a property",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": 1,\n  \"message\": \"Looking for a 12-month lease starting October. Quiet, non-smoking professional.\",\n  \"moveInDate\": \"2026-10-01\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties/1/applications", "host": ["{{baseUrl}}"], "path": ["api", "properties", "1", "applications"] }
+          }
+        },
+        {
+          "name": "My applications",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/applications", "host": ["{{baseUrl}}"], "path": ["api", "applications"] } }
+        },
+        {
+          "name": "Review a property",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Smooth move-in and a responsive owner.\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/properties/1/reviews", "host": ["{{baseUrl}}"], "path": ["api", "properties", "1", "reviews"] }
+          }
+        },
+        {
+          "name": "Send message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"recipientId\": 2,\n  \"propertyId\": 1,\n  \"body\": \"Hi, is the 11 am slot still free on Saturday?\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/messages", "host": ["{{baseUrl}}"], "path": ["api", "messages"] }
+          }
+        },
+        {
+          "name": "Conversation list",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/messages", "host": ["{{baseUrl}}"], "path": ["api", "messages"] } }
+        },
+        {
+          "name": "Thread with a peer",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/messages/with/2", "host": ["{{baseUrl}}"], "path": ["api", "messages", "with", "2"] } }
+        },
+        {
+          "name": "Notifications",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api", "notifications"] } }
+        },
+        {
+          "name": "Mark notifications read",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "read-all"] } }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "Tenant dashboard",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dashboards/tenant", "host": ["{{baseUrl}}"], "path": ["api", "dashboards", "tenant"] } }
+        },
+        {
+          "name": "Owner dashboard",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dashboards/owner", "host": ["{{baseUrl}}"], "path": ["api", "dashboards", "owner"] } }
+        }
+      ]
+    },
+    {
+      "name": "Owner (OWNER / ADMIN)",
+      "item": [
+        {
+          "name": "My properties",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/owner/properties", "host": ["{{baseUrl}}"], "path": ["api", "owner", "properties"] } }
+        },
+        {
+          "name": "Create listing",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bright 2BHK near Indiranagar Metro\",\n  \"description\": \"Sunlit, newly painted 2BHK ...\",\n  \"type\": \"APARTMENT\",\n  \"furnishing\": \"SEMI_FURNISHED\",\n  \"rentPerMonth\": 45000,\n  \"deposit\": 90000,\n  \"maintenancePerMonth\": 2500,\n  \"floorAreaSqft\": 1250,\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"address\": \"12th Main, Indiranagar\",\n  \"locationId\": 1,\n  \"lat\": 12.9719,\n  \"lng\": 77.6412,\n  \"imageUrls\": [\"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1800\"],\n  \"amenityIds\": [1, 3, 5]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties", "host": ["{{baseUrl}}"], "path": ["api", "properties"] }
+          }
+        },
+        {
+          "name": "Pause listing",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/owner/properties/1/pause", "host": ["{{baseUrl}}"], "path": ["api", "owner", "properties", "1", "pause"] } }
+        },
+        {
+          "name": "Republish for review",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/owner/properties/1/publish", "host": ["{{baseUrl}}"], "path": ["api", "owner", "properties", "1", "publish"] } }
+        },
+        {
+          "name": "Applications for my listings",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/owner/applications", "host": ["{{baseUrl}}"], "path": ["api", "owner", "applications"] } }
+        },
+        {
+          "name": "Decide application",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/owner/applications/1?status=APPROVED", "host": ["{{baseUrl}}"], "path": ["api", "owner", "applications", "1"], "query": [{ "key": "status", "value": "APPROVED" }] } }
+        },
+        {
+          "name": "Viewing requests",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/owner/visits", "host": ["{{baseUrl}}"], "path": ["api", "owner", "visits"] } }
+        },
+        {
+          "name": "Respond to visit",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/owner/visits/1?status=CONFIRMED", "host": ["{{baseUrl}}"], "path": ["api", "owner", "visits", "1"], "query": [{ "key": "status", "value": "CONFIRMED" }] } }
+        },
+        {
+          "name": "Listing analytics",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/owner/analytics", "host": ["{{baseUrl}}"], "path": ["api", "owner", "analytics"] } }
+        }
+      ]
+    },
+    {
+      "name": "Admin (ADMIN only)",
+      "item": [
+        {
+          "name": "Platform overview",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/overview", "host": ["{{baseUrl}}"], "path": ["api", "admin", "overview"] } }
+        },
+        {
+          "name": "All listings (filter by status)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/properties?status=PENDING&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "admin", "properties"], "query": [{ "key": "status", "value": "PENDING" }, { "key": "page", "value": "0" }, { "key": "size", "value": "20" }] }
+          }
+        },
+        {
+          "name": "Moderation queue",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/moderation", "host": ["{{baseUrl}}"], "path": ["api", "admin", "moderation"] } }
+        },
+        {
+          "name": "Approve / reject / suspend listing",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/admin/properties/1/status?status=APPROVED", "host": ["{{baseUrl}}"], "path": ["api", "admin", "properties", "1", "status"], "query": [{ "key": "status", "value": "APPROVED" }] } }
+        },
+        {
+          "name": "Feature / unfeature listing",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/admin/properties/1/feature?featured=true", "host": ["{{baseUrl}}"], "path": ["api", "admin", "properties", "1", "feature"], "query": [{ "key": "featured", "value": "true" }] } }
+        },
+        {
+          "name": "Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/users?role=OWNER&q=", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users"], "query": [{ "key": "role", "value": "OWNER" }, { "key": "q", "value": "" }] }
+          }
+        },
+        {
+          "name": "Suspend / restore user",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/admin/users/3/active?active=false", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "3", "active"], "query": [{ "key": "active", "value": "false" }] } }
+        },
+        {
+          "name": "Neighbourhood report",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/reports/locations", "host": ["{{baseUrl}}"], "path": ["api", "admin", "reports", "locations"] } }
+        },
+        {
+          "name": "Pending reviews",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/admin/reviews/pending", "host": ["{{baseUrl}}"], "path": ["api", "admin", "reviews", "pending"] } }
+        },
+        {
+          "name": "Moderate review",
+          "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/admin/reviews/5/moderate?approve=true", "host": ["{{baseUrl}}"], "path": ["api", "admin", "reviews", "5", "moderate"], "query": [{ "key": "approve", "value": "true" }] } }
+        },
+        {
+          "name": "Upload image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": { "mode": "file", "file": { "src": "" } },
+            "url": { "raw": "{{baseUrl}}/api/uploads/images", "host": ["{{baseUrl}}"], "path": ["api", "uploads", "images"] },
+            "description": "Multipart form-data field `file` → returns `{ url }`. Dev storage returns the original URL for demo simplicity."
+          }
+        }
+      ]
+    }
+  ]
+}
