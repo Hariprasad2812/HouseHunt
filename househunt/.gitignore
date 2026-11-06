@@ -1,0 +1,19 @@
+# Java / Maven
+backend/target/
+**/target/
+
+# Node
+frontend/node_modules/
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
