@@ -29,6 +29,8 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Behind nginx / a load balancer: honour X-Forwarded-Host/Proto so CORS same-origin checks work.
+  forward-headers-strategy: framework
   error:
     include-message: always
 
@@ -40,7 +42,7 @@ househunt:
   upload:
     dir: ${HOUSEHUNT_UPLOAD_DIR:uploads}
   cors:
-    allowed-origins: ${HOUSEHUNT_CORS_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:3000}
+    allowed-origins: ${HOUSEHUNT_CORS_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:3000,http://localhost:3001,http://localhost}
 
 ---
 spring:
@@ -62,11 +64,20 @@ spring:
   config:
     activate:
       on-profile: mysql
+  # Works with TiDB Cloud (MySQL-compatible, TLS required) and plain MySQL 8.
+  # Set DB_URL, or DB_HOST / DB_PORT / DB_NAME. For TiDB Cloud the username looks like "<prefix>.root".
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/househunt?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true}
+    url: ${DB_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:4000}/${DB_NAME:househunt}?sslMode=${DB_SSL_MODE:VERIFY_IDENTITY}&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME:househunt}
     password: ${DB_PASSWORD:househunt}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      minimum-idle: 1
+      connection-timeout: 20000
+      idle-timeout: 120000
+      keepalive-time: 60000
+      max-lifetime: 300000      # recycle before TiDB Cloud / proxies drop long-lived connections
   jpa:
     hibernate:
       ddl-auto: ${DB_DDL_AUTO:update}
